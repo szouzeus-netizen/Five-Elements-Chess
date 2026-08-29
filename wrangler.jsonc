@@ -1,0 +1,9 @@
+{
+  "name": "wuxing-chatgpt-app",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {"bindings": [{"name": "WUXING", "class_name": "WuxingGame"}]},
+  "migrations": [{"tag": "v1", "new_sqlite_classes": ["WuxingGame"]}],
+  "assets": {"directory": "dist", "binding": "ASSETS"}
+}

@@ -1,0 +1,9 @@
+{
+  "name": "wuxing-chatgpt-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {"dev": "vite", "build": "vite build", "deploy": "vite build && wrangler deploy"},
+  "dependencies": {"agents": "latest", "@modelcontextprotocol/sdk": "latest", "react": "latest", "react-dom": "latest"},
+  "devDependencies": {"@cloudflare/vite-plugin": "latest", "@vitejs/plugin-react": "latest", "vite": "latest", "vite-plugin-singlefile": "latest", "wrangler": "latest", "@types/react": "latest", "@types/react-dom": "latest", "typescript": "latest"}
+}

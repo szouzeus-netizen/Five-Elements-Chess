@@ -1,20 +1,10 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "five-elements-chess",
-  "main": "./src/index.ts",
+  "main": "src/server.ts",
   "compatibility_date": "2026-08-29",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "binding": "ASSETS",
-    "not_found_handling": "single-page-application",
-    "run_worker_first": ["/mcp/*", "/agents/*"]
-  },
+  "assets": { "directory": "./site", "binding": "ASSETS" },
   "durable_objects": {
-    "bindings": [
-      { "name": "WUXING", "class_name": "WuxingGame" }
-    ]
+    "bindings": [{ "name": "WUXING", "class_name": "WuxingGame" }]
   },
-  "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["WuxingGame"] }
-  ]
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["WuxingRoom"] }]
 }

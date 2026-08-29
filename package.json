@@ -1,25 +1,7 @@
 {
-  "name": "five-elements-chess",
-  "private": true,
-  "version": "0.2.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "deploy": "vite build && wrangler deploy"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "1.30.0",
-    "agents": "0.22.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
-  },
-  "devDependencies": {
-    "@cloudflare/vite-plugin": "1.54.2",
-    "@vitejs/plugin-react": "6.1.1",
-    "typescript": "7.0.2",
-    "vite": "8.2.2",
-    "wrangler": "4.127.1"
-  }
+  "name":"five-elements-chess",
+  "private":true,
+  "version":"1.0.0",
+  "scripts":{"deploy":"wrangler deploy","dev":"wrangler dev"},
+  "devDependencies":{"wrangler":"^4.27.1","typescript":"^7.0.2"}
 }

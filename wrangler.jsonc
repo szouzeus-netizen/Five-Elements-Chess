@@ -6,5 +6,8 @@
   "durable_objects": {
     "bindings": [{ "name": "WUXING", "class_name": "WuxingGame" }]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["WuxingRoom"] }]
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["WuxingRoom"] },
+    { "tag": "v2", "new_sqlite_classes": ["WuxingGame"] }
+  ]
 }

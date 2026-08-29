@@ -8,3 +8,5 @@ Cloudflare 当前的「Upload your static files」只适合静态站点；这个
 
 官方参考：
 https://developers.cloudflare.com/workers/demos/chatgpt-app/
+
+Cloudflare deployment test

@@ -219,9 +219,25 @@ function refillAndEnd(s:State,desc:string){
  s.move++;s.turn=opp(side);checkWin(s);
 }
 function boardCount(s:State,side:Side){return s.board.filter(p=>p?.side===side).length;}
+// 五行大成判断的是“当前控制权”，不是历史上是否曾经炼化过。
+// 一方只要当前至少控制一个淼、森、焱、垚、鑫即可；控制方式包括：
+// 1) 该大棋在自己手牌中；或 2) 该大棋正在自己控制的棋盘位置上。
+// 如果大棋后来被对方吃掉，它进入对方手牌，原玩家立即失去该大棋的控制权。
+function controlsAllFiveBigs(s:State,side:Side){
+ for(const e of E){
+   const inHand=s.hands[side].big[e]>0;
+   const onBoard=s.board.some(p=>p?.kind==='big'&&p.side===side&&p.element===e);
+   if(!inHand&&!onBoard)return false;
+ }
+ return true;
+}
 function checkWin(s:State){
+ // 兼容旧版本已经持久化的错误“五行大成”状态：如果只是历史炼化记录
+ // 导致旧版本判胜，而当前已经不再同时控制五种大棋，则撤销这个旧胜负结果。
+ if(s.winner&&s.winReason==='五行大成'&&!controlsAllFiveBigs(s,s.winner)){s.winner=null;s.winReason=null;}
  if(s.winner)return;
- for(const side of ['black','white'] as Side[])if(E.every(e=>s.refined[side][e])){s.winner=side;s.winReason='五行大成';return;}
+ // 五行大成：当前同时控制五种上级大棋；不追认已经失去的历史控制权。
+ for(const side of ['black','white'] as Side[])if(controlsAllFiveBigs(s,side)){s.winner=side;s.winReason='五行大成';return;}
  if(s.board.every(Boolean)){const b=boardCount(s,'black'),w=boardCount(s,'white');s.winner=b===w?null:(b>w?'black':'white');if(s.winner)s.winReason='棋盘占领';if(s.winner)return;}
  if(!hasLegalMove(s,s.turn)){s.winner=opp(s.turn);s.winReason='逼停';}
 }

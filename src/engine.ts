@@ -90,7 +90,11 @@ function emptyPlacementBlocked(s:State,side:Side,e:Element,c:number){
 function legalSmall(s:State,side:Side,e:Element,c:number,allowHand=true){
  if(c<1||c>25)return'位置无效'; if(allowHand&&s.hands[side].small[e]<=0)return`没有小${CN[e]}`;
  const p=pAt(s,c), counter=BEATS[e];
- if(!p){if(emptyPlacementBlocked(s,side,e,c))return`不能落子：该空格被对方小${CN[COUNTER[e]]}封住`;return null;}
+ // Every small-piece placement, including a capture, must obey the same
+ // counter-protection rule.  An enemy counter-piece adjacent to the target
+ // makes the attempted placement illegal.
+ if(emptyPlacementBlocked(s,side,e,c))return`不能落子：该位置被对方小${CN[COUNTER[e]]}封住`;
+ if(!p)return null;
  if(p.kind==='big')return'小棋不能吃大棋';
  if(p.side===side)return'同级小棋不能吃自己的棋子';
  if(p.element!==counter)return`小${CN[e]}只能吃对方小${CN[counter]}`;
@@ -144,18 +148,33 @@ function takeThree(s:State,side:Side,e:Element,sources?:Array<number|'hand'>){
 function placeBig(s:State,side:Side,e:Element,loc:number,fromSupply:boolean){
  const cells=BIG_LOCS[loc], old=cells.map(c=>pAt(s,c));
  const id=`${s.move}-${side}-${e}-${Math.random().toString(36).slice(2,8)}`;
+ const capturedSmall:Element[]=[];
  let captured:Piece|null=null;
- for(const c of cells){const p=pAt(s,c);if(p?.kind==='small' && p.side===opp(side))s.hands[side].small[p.element]++; if(p?.kind==='big')captured=p;}
+ // A big-piece placement resolves its captures before its ability is checked.
+ // Every small piece removed by the big piece (enemy OR own) goes to the
+ // current player's small-piece hand, so it is immediately available to an
+ // ability that follows this placement.
+ for(const c of cells){
+   const p=pAt(s,c);
+   if(p?.kind==='small'){
+     capturedSmall.push(p.element);
+     s.hands[side].small[p.element]++;
+   }
+   if(p?.kind==='big')captured=p;
+ }
  if(captured){s.hands[side].big[captured.element]++;}
  if(fromSupply){s.bigSupply[e]--;}else{s.hands[side].big[e]--;}
  for(const c of cells)s.board[c-1]={kind:'big',side,element:e,bigId:id,bigLoc:loc};
- return {old,captured};
+ return {old,captured,capturedSmall};
 }
 
 export type AbilityAction={kind:'none'}|{kind:'water';moves:{from:number;to:number}[]}|{kind:'wood';places:{element:Element;cell:number}[]}|{kind:'fire';remove:number[]}|{kind:'earth';flip:number[]}|{kind:'metal';element:Element;cell:number};
 function adjacentToBig(loc:number){const cells=new Set(BIG_LOCS[loc]), out=new Set<number>();for(const c of cells)for(const n of ADJ[c-1])if(!cells.has(n))out.add(n);return [...out];}
 function validateMovedPlacement(s:State,p:Piece,to:number){if(p.kind!=='small')return'只能移动小棋';if(to<1||to>25||pAt(s,to))return'目标必须是空格';if(emptyPlacementBlocked(s,p.side,p.element,to))return`目标位置被对方小${CN[COUNTER[p.element]]}封住`;return null;}
 function applyAbility(s:State,side:Side,e:Element,loc:number,a:AbilityAction){
+ // IMPORTANT: placeBig() has already resolved captures and returned every
+ // captured small piece to this player's hand. Abilities therefore see the
+ // post-capture hand, exactly as the rules require.
  const adj=new Set(adjacentToBig(loc));
  if(a.kind==='none')return null;
  if(e==='water'&&a.kind==='water'){
@@ -178,11 +197,18 @@ function applyAbility(s:State,side:Side,e:Element,loc:number,a:AbilityAction){
    for(const c of a.flip)s.board[c-1]!.side=side;return null;
  }
  if(e==='metal'&&a.kind==='metal'){
-   if(s.supply[a.element]<=0)return`供应区没有小${CN[a.element]}`; const c=a.cell;if(c<1||c>25)return'鑫的位置无效';const p=pAt(s,c);
-   if(p?.kind==='big')return'鑫不能吃大棋'; if(p?.side===side)return'鑫不能吃自己的小棋'; if(p?.side===opp(side)&&p.element!==BEATS[a.element])return`鑫的小${CN[a.element]}只能吃对方小${CN[BEATS[a.element]]}`;
-   if(!p&&emptyPlacementBlocked(s,side,a.element,c))return`鑫：该位置被对方小${CN[COUNTER[a.element]]}封住`;
+   if(s.supply[a.element]<=0)return`供应区没有小${CN[a.element]}`;
+   const c=a.cell;
+   // 鑫 places a normal small piece from supply. Its extra action is not a
+   // rules bypass: validate it with the exact same small-piece placement
+   // rules used by an ordinary small move, including counter-protection.
+   const er=legalSmall(s,side,a.element,c,false);
+   if(er)return`鑫：${er}`;
+   const p=pAt(s,c);
    if(p?.side===opp(side)&&p.element===BEATS[a.element])s.hands[side].small[p.element]++;
-   s.supply[a.element]--;s.board[c-1]={kind:'small',side,element:a.element};return null;
+   s.supply[a.element]--;
+   s.board[c-1]={kind:'small',side,element:a.element};
+   return null;
  }
  return'能力参数错误';
 }
